@@ -1,2 +1,37 @@
-.venv/
+# Byte-compiled and cache files
 __pycache__/
+*.py[cod]
+*.so
+*.pyd
+
+# Virtual environment
+venv/
+.env/
+*.venv/
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# Testing and Coverage Reports
+.coverage
+htmlcov/
+pytest_cache/
+nose2-coverage/
+.tox/
+
+# Build and Distribution
+dist/
+build/
+*.egg-info/
+pip-wheel-metadata/
+
+# Logs and Temporary Files
+*.log
+*.tmp
+.DS_Store
+*.bak
+
