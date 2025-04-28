@@ -509,7 +509,3 @@ def log(txt: str, **log_opts) -> None:
         cmd += _to_valid_option(opt, value)
 
     cmd += txt
-
-
-def version_check() -> None:
-    return system("gum version-check")
