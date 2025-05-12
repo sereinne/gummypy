@@ -15,7 +15,45 @@ def _handle_str(v: str) -> str:
     return f'"{v}"'
 
 
-def _is_dot_opt(opt: str) -> bool:
+def _is_long_dot_opt(opt: str) -> bool:
+    idx: int = opt.find("_")
+    if idx == -1:
+        return False
+    beginning: str = opt[:idx]
+    match beginning:
+        case "cursor":
+            end: str = opt[idx + 1 :]
+
+            queries: list[str] = [
+                "text_foreground",
+                "text_background",
+                "line_number_foreground",
+                "line_number_background",
+                "line_foreground",
+                "line_foreground",
+            ]
+
+            for query in queries:
+                if query in end:
+                    return True
+            return False
+        case "file":
+            end: str = opt[idx + 1 :]
+            return True if "size" in end else False
+        case "match":
+            end: str = opt[idx + 1 :]
+            return True if "highlight" in end else False
+        case "selected":
+            end: str = opt[idx + 1 :]
+            return True if "indicator" in end else False
+        case "unselected":
+            end: str = opt[idx + 1 :]
+            return True if "prefix" in end else False
+        case _:
+            return False
+
+
+def _is_short_opt(opt: str) -> bool:
     idx: int = opt.find("_")
     if idx == -1:
         return False
@@ -28,26 +66,27 @@ def _is_dot_opt(opt: str) -> bool:
         case "cell":
             return True
         case "cursor":
-            end: str = opt[idx + 1 :]
-            return True if end != "prefix" and end != "line" else False
+            return True
         case "directory":
             return True
         case "file":
-            end: str = opt[idx + 1 :]
-            return True if end != "size" else False
+            return True
         case "header":
             return True
         case "help":
             return True
         case "item":
             return True
+        case "indicator":
+            return True
+        case "text":
+            return True
         case "key":
             return True
         case "level":
             return True
         case "match":
-            end: str = opt[idx + 1 :]
-            return True if end != "highlight" else False
+            return True
         case "message":
             return True
         case "permissions":
@@ -59,8 +98,7 @@ def _is_dot_opt(opt: str) -> bool:
         case "prompt":
             return True
         case "selected":
-            end: str = opt[idx + 1 :]
-            return True if end != "prefix" else False
+            return True
         case "separator":
             return True
         case "spinner":
@@ -72,8 +110,7 @@ def _is_dot_opt(opt: str) -> bool:
         case "title":
             return True
         case "unselected":
-            end: str = opt[idx + 1 :]
-            return True if end != "prefix" else False
+            return True
         case "value":
             return True
         case _:
@@ -82,7 +119,18 @@ def _is_dot_opt(opt: str) -> bool:
 
 def _to_valid_option(optname: str, value) -> str:
     value_str: str = _stringify_value(value)
-    if _is_dot_opt(optname):
+    if _is_long_dot_opt(optname):
+        # --selected-indicator.foreground
+        first_dash = optname.find("_")
+        second_dash = optname.find("_", first_dash + 1)
+
+        before_second_dash = optname[:second_dash]
+        before_second_dash = before_second_dash.replace("_", "-")
+        after_second_dash = optname[second_dash + 1 :]
+
+        return f"--{before_second_dash}.{after_second_dash}={value_str}"
+
+    elif _is_short_opt(optname):
         dot_opt: str = optname.replace("_", ".")
         return f"--{dot_opt}={value_str} "
 
@@ -203,6 +251,54 @@ gum_options = {
         "strip_ansi": bool,
         "type": str,  # "markdown"
     },
+    "filter": {
+        # flags
+        "indicator": str,
+        "selected": str,
+        "no_show_help": bool,
+        "show_help": bool,
+        "selected_prefix": str,
+        "unselected_prefix": str,
+        "header": str,
+        "placeholder": str,
+        "prompt": str,
+        "width": int,
+        "height": int,
+        "value": str,
+        "reverse": bool,
+        "no_fuzzy": bool,
+        "fuzzy": bool,
+        "no_fuzzy_sort": bool,
+        "fuzzy_sort": bool,
+        "timeout": str,
+        "input_delimiter": str,
+        "output_delimiter": str,
+        # Style flags
+        "indicator_foreground": str,
+        "indicator_background": str,
+        "selected_indicator_foreground": str,
+        "selected_indicator_background": str,
+        "unselected_prefix_foreground": str,
+        "unselected_prefix_background": str,
+        "header_foreground": str,
+        "header_background": str,
+        "text_foreground": str,
+        "text_background": str,
+        "cursor_text_foreground": str,
+        "cursor_text_background": str,
+        "match_foreground": str,
+        "match_background": str,
+        "prompt_foreground": str,
+        "prompt_background": str,
+        "placeholder_foreground": str,
+        "placeholder_background": str,
+        # Selection
+        "limit": int,
+        "no_limit": bool,
+        "select_if_one": bool,
+        "no_strict": bool,
+        "strict": bool,
+    },
     "input": {
         "placeholder": str,  #  "Type something_.."
         "prompt": str,  # "> "
@@ -256,6 +352,26 @@ gum_options = {
         "title": str,  # "Loading..."
         "align": str,  # "left"
         "timeout": str,  # "0s"
+    },
+    "style": {
+        "trim": bool,
+        "no_strip_ansi": bool,
+        "strip_ansi": bool,
+        "foreground": str,
+        "background": str,
+        "border": str,
+        "border_background": str,
+        "border_foreground": str,
+        "align": str,
+        "height": int,
+        "width": int,
+        "margin": str,
+        "padding": str,
+        "bold": bool,
+        "faint": bool,
+        "italic": bool,
+        "strikethrough": bool,
+        "underline": bool,
     },
     "table": {
         "separator": str,  # ","
@@ -409,6 +525,21 @@ def format(text_template: str, **format_opts) -> str:
     return popen(cmd).read().strip()
 
 
+def filter(opts: list[str], **filter_opts) -> str:
+    allowed_opts: dict[str, type] = gum_options["filter"]
+
+    _validate_kwargs(allowed_opts, **filter_opts)
+
+    cmd: str = "gum filter "
+
+    for opt, value in filter_opts.items():
+        cmd += _to_valid_option(opt, value)
+
+    cmd += " ".join(opts)
+
+    return popen(cmd).read().strip()
+
+
 def input(**input_opts) -> str:
     allowed_opts: dict[str, type] = gum_options["input"]
 
@@ -467,6 +598,19 @@ def spin(cmd: str, **spin_opts) -> None:
     to_exec += cmd
 
     system(to_exec)
+
+
+def style(text_to_style: str, **style_opts):
+    allowed_opts: dict[str, type] = gum_options["style"]
+
+    _validate_kwargs(allowed_opts, **style_opts)
+
+    cmd: str = "gum style " + text_to_style + " "
+
+    for opt, value in style_opts.items():
+        cmd += _to_valid_option(opt, value)
+
+    print(popen(cmd).read().strip())
 
 
 def table(filepath: str, **table_opts) -> None:
