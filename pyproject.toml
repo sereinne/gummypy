@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gummypy"
-version = "0.1.2"
+version = "1.0.0"
 description = "A simple library that contains wrapper functions for gum CLI tool"
 authors = [{ name = "sereinne", email = "akbarsmp27@gmail.com" }]
 readme = "README.md"
