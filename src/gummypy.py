@@ -12,10 +12,11 @@ from typing import Any
 
 # ╔══════════════════════════════════════ type aliases ══════════════════════════════════════╗
 
+# Comment out the type alias because it is supported on python 3.12
 # all supported types of an option in `gum`
-type SupportedOptionTypes = str | int | bool
+# type SupportedOptionTypes = str | int | bool
 # all supported types of a parameter in `gum`
-type SupportedParameterTypes = str | list[str] | None
+# type SupportedParameterTypes = str | list[str] | None
 
 # ╚══════════════════════════════════════ type aliases ══════════════════════════════════════╝
 
@@ -43,7 +44,7 @@ class GumCommandBuilder:
         self.possible_opts: dict[str, type] = allowed_opts
         self.args: list[tuple[str, str]] = []
 
-    def add_args(self, optname: str, value: SupportedOptionTypes):
+    def add_args(self, optname: str, value: str | int | bool):
         """
         A method to add user-defined **kwargs into GumCommandBuilder's arguments list
         """
@@ -59,7 +60,7 @@ class GumCommandBuilder:
 
         self.args.append((optname, stringified_value))
 
-    def execute(self, param: SupportedParameterTypes = None, stringify=True) -> int:
+    def execute(self, param: str | list[str] | None = None, stringify=True) -> int:
         """
 
         A method to execute all a gum command needs (options and parameter)
@@ -87,8 +88,10 @@ class GumCommandBuilder:
                 dot_opt: str = optname.replace("_", ".")
                 to_execute += f"--{dot_opt}={value} "
 
-            # If its not a short or a long option it implies that the option is just a normal long option.
-            to_execute += f"--{optname}={value} "
+            else:
+                # If its not a short or a long option it implies that the option is just a normal long option.
+                dash_opt: str = optname.replace("_", "-")
+                to_execute += f"--{dash_opt}={value} "
 
         # Checks if `param` is present and has the expected value
         if isinstance(param, str):
@@ -106,7 +109,7 @@ class GumCommandBuilder:
         # Executes the command without getting the output
         return os.system(to_execute)
 
-    def execute_with_ret(self, param: SupportedParameterTypes = None) -> str:
+    def execute_with_ret(self, param: str | list[str] | None = None) -> str:
         """
         A method to execute all a gum command needs (options and parameter) and returns its output
 
@@ -134,8 +137,10 @@ class GumCommandBuilder:
                 dot_opt: str = optname.replace("_", ".")
                 to_execute += f"--{dot_opt}={value} "
 
-            # If its not a short or a long option it implies that the option is just a normal long option.
-            to_execute += f"--{optname}={value} "
+            else:
+                # If its not a short or a long option it implies that the option is just a normal long option.
+                dash_opt: str = optname.replace("_", "-")
+                to_execute += f"--{dash_opt}={value} "
 
         # checks if `param` is present and has the expected value
         if isinstance(param, str):
@@ -149,7 +154,7 @@ class GumCommandBuilder:
 
     # Convenience function to convert `SupportedOptionTypes` into a `str`
     @classmethod
-    def stringify_opt_value(cls, value: SupportedOptionTypes) -> str:
+    def stringify_opt_value(cls, value: str | int | bool) -> str:
         # It's important to handle `bool` before handling `int` because a `bool` is just a number
         if isinstance(value, str):
             return f'"{value}"'
@@ -204,59 +209,163 @@ class GumCommandBuilder:
         beginning: str = optname[:idx]
         match beginning:
             case "base":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "border":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "cell":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "cursor":
-                return True
+                return True if "mode" in optname else False
             case "directory":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "file":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "header":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "help":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "item":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "indicator":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "text":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "key":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "level":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "match":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "message":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "permissions":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "placeholder":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "prefix":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "prompt":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "selected":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "separator":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "spinner":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "symlink":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "time":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "title":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "unselected":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case "value":
-                return True
+                return (
+                    True
+                    if "background" in optname or "foreground" in optname
+                    else False
+                )
             case _:
                 return False
 
