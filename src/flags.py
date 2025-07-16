@@ -69,8 +69,8 @@ subcommands_options: dict[str, dict[str, type]] = {
         "permissions_background": str,  # ""
         "selected_foreground": str,  # "212"
         "selected_background": str,  # ""
-        "file-size_foreground": str,  # "240"
-        "file-size_background": str,  # ""
+        "file_size_foreground": str,  # "240"
+        "file_size_background": str,  # ""
         "header_foreground": str,  # 99
         "header_background": str,  # ""
     },
@@ -158,7 +158,7 @@ subcommands_options: dict[str, dict[str, type]] = {
         "vertical": bool,
     },
     "pager": {
-        "showline_numbers": bool,
+        "show_line_numbers": bool,
         "no_soft_wrap": bool,
         "soft_wrap": bool,
         "timeout": str,  # "0s"
@@ -182,6 +182,26 @@ subcommands_options: dict[str, dict[str, type]] = {
         "title": str,  # "Loading..."
         "align": str,  # "left"
         "timeout": str,  # "0s"
+    },
+    "style": {
+        "trim": bool,
+        "no_strip_ansi": bool,
+        "strip_ansi": bool,
+        "foreground": str,
+        "background": str,
+        "border": str,
+        "border_background": str,
+        "border_foreground": str,
+        "align": str,
+        "height": int,
+        "width": int,
+        "margin": str,
+        "padding": str,
+        "bold": bool,
+        "faint": bool,
+        "italic": bool,
+        "strikethrough": bool,
+        "underline": bool,
     },
     "table": {
         "separator": str,  # ","
@@ -273,3 +293,162 @@ subcommands_options: dict[str, dict[str, type]] = {
         "version": bool,
     },
 }
+
+
+def validate_subcommand_flags(subcmd: str, **opts):
+    # get all allowed flags for a subcommand by indexing a `subcmd` into the `subcommands_options` dictionary.
+    allowed_flags: dict[str, type] = subcommands_options[subcmd]
+
+    for opt, value in opts.items():
+        # checks if the key named `opt` is valid according to each subcommands `allowed_flags`
+        if allowed_flags.get(opt) is None:
+            raise KeyError(f"No flag named {opt} in subcommand {subcmd}")
+
+        # checks if the value of `value` is  valid based on the type of `allowed_flags[opt]`
+        # the reason why then `type` function is used because it has stricter type requirements
+        if type(value) is not allowed_flags[opt]:
+            raise TypeError(
+                f"expected type {allowed_flags[opt]} instead got {type(value)}"
+            )
+
+
+def is_long_dot_option(flag: str) -> bool:
+    last_dash_position: int = flag.rfind("_")
+    prefix_indicator: str = flag[:last_dash_position]
+    match prefix_indicator:
+        case (
+            "file_size"
+            | "selected_indicator"
+            | "unselected_prefix"
+            | "cursor_text"
+            | "line_number"
+            | "match_highlight"
+            | "cursor_line_number"
+            | "cursor_line"
+            | "end_of_buffer"
+        ):
+            suffix_indicator: str = flag[last_dash_position + 1 :]
+            return (
+                True
+                if suffix_indicator == "foreground" or suffix_indicator == "background"
+                else False
+            )
+        case _:
+            return False
+
+
+def is_short_dot_option(flag: str) -> bool:
+    dash_position: int = flag.find("_")
+    prefix_indicator: str = flag[:dash_position]
+    match prefix_indicator:
+        case (
+            "border"
+            | "case"
+            | "directory"
+            | "file"
+            | "header"
+            | "help"
+            | "indicator"
+            | "item"
+            | "key"
+            | "level"
+            | "match"
+            | "message"
+            | "permissions"
+            | "placeholder"
+            | "prefix"
+            | "prompt"
+            | "selected"
+            | "separator"
+            | "symlink"
+            | "text"
+            | "time"
+            | "title"
+            | "unselected"
+            | "value"
+        ):
+            suffix_indicator: str = flag[dash_position + 1 :]
+            return (
+                True
+                if suffix_indicator == "foreground" or suffix_indicator == "background"
+                else False
+            )
+        case "cursor":
+            suffix_indicator: str = flag[dash_position + 1 :]
+            return (
+                True
+                if suffix_indicator == "foreground"
+                or suffix_indicator == "background"
+                or suffix_indicator == "mode"
+                else False
+            )
+        case _:
+            return False
+
+
+def is_long_dash_option(flag: str) -> bool:
+    first_dash: int = flag.find("_")
+    prefix_indicator: str = flag[:first_dash]
+
+    match prefix_indicator:
+        case "select":
+            suffix_indicator: str = flag[first_dash + 1 :]
+            return True if suffix_indicator == "if_one" else False
+        case "show":
+            suffix_indicator: str = flag[first_dash + 1 :]
+            return (
+                True
+                if suffix_indicator == "line_numbers"
+                or suffix_indicator == "cursor_line"
+                or suffix_indicator == "output"
+                else False
+            )
+        case "fields":
+            suffix_indicator: str = flag[first_dash + 1 :]
+            return True if suffix_indicator == "per_record" else False
+        case _:
+            return False
+
+
+def is_short_dash_option(flag: str) -> bool:
+    return flag.find("_") == -1
+
+
+def to_parsable_opt(flag: str) -> str:
+    # e.g `--line-number.background`
+    if is_long_dot_option(flag):
+        # get the first occurance of `_` in order to be converted into `-`
+        first_dash = flag.find("_")
+        # get the second occurance of `_` in order to be converted into `.`
+        second_dash = flag.find("_", first_dash + 1)
+
+        # make `str` into `list` so that we can index the first and second occurance and replace it into a dash and dot
+        to_list = list(flag)
+        to_list[first_dash] = "-"
+        to_list[second_dash] = "."
+
+        # joined the `list` into a `str`
+        joined = "".join(to_list)
+        return f"--{joined}"
+    # e.g `--item.foreground`
+    elif is_short_dot_option(flag):
+        parsable_opt = flag.replace("_", ".")
+        return f"--{parsable_opt}"
+    # e.g `--cursor-prefix`
+    elif is_long_dash_option(flag):
+        parsable_opt = flag.replace("_", "-")
+        return f"--{parsable_opt}"
+    # e.g `--limit`
+    elif is_short_dash_option(flag):
+        return f"--{flag}"
+    raise ValueError("Unrecognized type of flag")
+
+
+def stringify_value(val) -> str:
+    if type(val) is str:
+        return f'"{val}"'
+    elif type(val) is bool:
+        return str(val).lower()
+    elif type(val) is int:
+        return str(val)
+    raise ValueError("Unsupported value to stringify...")
