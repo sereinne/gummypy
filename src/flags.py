@@ -36,12 +36,12 @@ subcommands_options: dict[str, dict[str, type]] = {
         "no_show_help": bool,
         "show_help": bool,
         "timeout": str,
-        "prompt-foreground": str,  # "#7571F9"
-        "prompt-background": str,  # ""
-        "selected-foreground": str,  # "230"
-        "selected-background": str,  # "212"
-        "unselected-foreground": str,  # "254"
-        "unselected-background": str,  # "235"
+        "prompt_foreground": str,  # "#7571F9"
+        "prompt_background": str,  # ""
+        "selected_foreground": str,  # "230"
+        "selected_background": str,  # "212"
+        "unselected_foreground": str,  # "254"
+        "unselected_background": str,  # "235"
     },
     "file": {
         "cursor": str,  # ">"
@@ -96,6 +96,8 @@ subcommands_options: dict[str, dict[str, type]] = {
         "timeout": str,
         "input_delimiter": str,
         "output_delimiter": str,
+        "no_strip_ansi": bool,
+        "strip_ansi": bool,
         # Style flags
         "indicator_foreground": str,
         "indicator_background": str,
@@ -182,6 +184,10 @@ subcommands_options: dict[str, dict[str, type]] = {
         "title": str,  # "Loading..."
         "align": str,  # "left"
         "timeout": str,  # "0s"
+        "spinner_foreground": str,
+        "spinner_background": str,
+        "title_forground": str,
+        "title_background": str,
     },
     "style": {
         "trim": bool,
@@ -343,7 +349,9 @@ def is_short_dot_option(flag: str) -> bool:
     match prefix_indicator:
         case (
             "border"
+            | "base"
             | "case"
+            | "cell"
             | "directory"
             | "file"
             | "header"
@@ -360,6 +368,7 @@ def is_short_dot_option(flag: str) -> bool:
             | "prompt"
             | "selected"
             | "separator"
+            | "spinner"
             | "symlink"
             | "text"
             | "time"

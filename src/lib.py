@@ -1,4 +1,6 @@
 import os
+import tempfile
+import inspect
 from typing import Callable
 from typing import Any
 from src.flags import validate_subcommand_flags
@@ -148,9 +150,38 @@ def pager(filepath: str, **pager_opts):
     os.system(cmd)
 
 
-# TODO implement spin
 def spin(fnc: Callable[..., Any], **spin_opts):
     validate_subcommand_flags("spin", **spin_opts)
+
+    # turn valid subcommand options into parsable options that `gum` can parse.
+    flags: str = ""
+    for opt, value in spin_opts.items():
+        parsable_opt: str = to_parsable_opt(opt)
+        stringified_value: str = stringify_value(value)
+        flags += f"{parsable_opt}={stringified_value} "
+
+    # make temporary file
+    tmpfile = tempfile.NamedTemporaryFile(suffix=".py", delete=False)
+    try:
+        path = tmpfile.name
+        # turn `fnc` declaration into literal string source code
+        source_code = inspect.getsource(fnc)
+
+        # the `command` to run for `gum spin`, the function will run as a script for `gum spin`
+        code_to_run: str = f"python3 {path}"
+
+        # write `source_code` from `fnc` to `tmpfile`
+        with open(tmpfile.name, "w") as tf:
+            tf.write(f"""{source_code}\n\n{fnc.__name__}()""")
+
+        # after writing the source code, make `python` execute that code
+        cmd: str = f"gum spin {code_to_run} {flags}"
+
+        os.system(cmd)
+    finally:
+        # clean up
+        tmpfile.close()
+        os.unlink(tmpfile.name)
 
 
 def style(text: str, **style_opts) -> str:
