@@ -18,3 +18,10 @@ dependencies = []
 Homepage = "https://github.com/sereinne/gummypy"
 Repository = "https://github.com/sereinne/gummypy"
 Issues = "https://github.com/sereinne/gummypy/issues"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
